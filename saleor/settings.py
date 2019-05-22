@@ -55,7 +55,7 @@ DATABASES = {
 }
 
 
-TIME_ZONE = "America/Chicago"
+TIME_ZONE = "Europe/Kiev"
 LANGUAGE_CODE = "en"
 LANGUAGES = [
     ("ar", _("Arabic")),
