@@ -4,29 +4,39 @@ from ... import ChargeStatus, TransactionKind
 from ...interface import GatewayConfig, GatewayResponse, PaymentData
 from .forms import PrivatPaymentForm
 
+def privat_success():
+    return True
+
 def get_client_token(**_):
     """Generate a random client token."""
     return str(uuid.uuid4())
+
+def create_form(data, payment_information, connection_params):
+    return PrivatPaymentForm(data=data)      
 
 
 def authorize(
         payment_information: PaymentData,
         config: GatewayConfig,
     ) -> GatewayResponse:
+    
+    success = privat_success()
+    error = None
 
+    if not success:
+        error = "Unable to authorize transaction"
     # Handle connecting to the gateway and sending the auth request here
-    response = gateway.authorize(token=payment_information.token)
+    # response = gateway.authorize(token=payment_information.token)
 
     # Return a correct response format so Saleor can process it,
     # the response must be json serializable
     return GatewayResponse(
-        is_success=response.is_success,
-        transaction_id=response.transaction.id,
+        is_success=success,
         kind=TransactionKind.AUTH,
-        amount=response.amount,
-        currency=response.currency,
-        error=get_error(response),
-        raw_response=get_payment_gateway_response(response),
+        amount=payment_information.amount,
+        currency=payment_information.currency,
+        transaction_id=payment_information.token,
+        error=error,
     )  
 
 def refund(
@@ -34,19 +44,23 @@ def refund(
     config: GatewayConfig,
 ) -> GatewayResponse:
 
+    error = None
+    success = privat_success()
+    if not success:
+        error = "Unable to process capture"
+
     # Handle connecting to the gateway and sending the refund request here
-    response = gateway.refund(token=payment_information.token)
+    # response = gateway.refund(token=payment_information.token)
 
     # Return a correct response format so Saleor can process it,
     # the response must be json serializable
     return GatewayResponse(
-        is_success=response.is_success,
-        transaction_id=response.transaction.id,
+        is_success=success,
         kind=TransactionKind.REFUND,
-        amount=response.amount,
-        currency=response.currency,
-        error=get_error(response),
-        raw_response=get_payment_gateway_response(response),
+        amount=payment_information.amount,
+        currency=payment_information.currency,
+        transaction_id=payment_information.token,
+        error=error,
     )
 
 
@@ -56,18 +70,21 @@ def capture(
 ) -> GatewayResponse:
 
     # Handle connecting to the gateway and sending the capture request here
-    response = gateway.capture(token=payment_information.token)
+    # response = gateway.capture(token=payment_information.token)
+    error = None
+    success = privat_success()
+    if not success:
+        error = "Unable to process capture"
 
     # Return a correct response format so Saleor can process it,
     # the response must be json serializable
     return GatewayResponse(
-        is_success=response.is_success,
-        transaction_id=response.transaction.id,
+        is_success=success,
         kind=TransactionKind.CAPTURE,
-        amount=response.amount,
-        currency=response.currency,
-        error=get_error(response),
-        raw_response=get_payment_gateway_response(response),
+        amount=payment_information.amount,
+        currency=payment_information.currency,
+        transaction_id=payment_information.token,
+        error=error,
     )
 
 
@@ -78,43 +95,21 @@ def void(
 ) -> GatewayResponse:
 
     # Handle connecting to the gateway and sending the void request here
-    response = gateway.void(token=payment_information.token)
+    # response = gateway.void(token=payment_information.token)
+    error = None
+    success = privat_success()
+    if not success:
+        error = "Unable to void the transaction."
 
     # Return a correct response format so Saleor can process it,
     # the response must be json serializable
     return GatewayResponse(
-        is_success=response.is_success,
-        transaction_id=response.transaction.id,
+        is_success=success,
         kind=TransactionKind.VOID,
-        amount=response.amount,
-        currency=response.currency,
-        error=get_error(response),
-        raw_response=get_payment_gateway_response(response),
-    )
-
-
-
-def charge(
-    payment_information: PaymentData,
-    config: GatewayConfig,
-) -> GatewayResponse:
-
-    # Handle connecting to the gateway and sending the charge request here
-    response = gateway.charge(
-        token=payment_information.token,
         amount=payment_information.amount,
-    )
-
-    # Return a correct response format so Saleor can process it,
-    # the response must be json serializable
-    return GatewayResponse(
-        is_success=response.is_success,
-        transaction_id=response.transaction.id,
-        kind=TransactionKind.CHARGE,
-        amount=response.amount,
-        currency=response.currency,
-        error=get_error(response),
-        raw_response=get_payment_gateway_response(response),
+        currency=payment_information.currency,
+        transaction_id=payment_information.token,
+        error=error,
     )
 
 
@@ -124,19 +119,27 @@ def process_payment(
     config: GatewayConfig,
 ) -> GatewayResponse:
 
-    # Authorize, update the token, then capture
+    """Process the payment."""
+    token = payment_information.token
+
+    # Process payment normally if payment token is valid
+    if token not in dict(ChargeStatus.CHOICES):
+        return capture(payment_information, config)
+
+    # Process payment by charge status which is selected in the payment form
+    # Note that is for testing by dummy gateway only
+    charge_status = token
     authorize_response = authorize(payment_information, config)
-    payment_information.token = authorize_response.transaction_id
+    if charge_status == ChargeStatus.NOT_CHARGED:
+        return authorize_response
+
+    if not config.auto_capture:
+        return authorize_response
 
     capture_response = capture(payment_information, config)
-
+    if charge_status == ChargeStatus.FULLY_REFUNDED:
+        return refund(payment_information, config)
     return capture_response
 
 
 
-def create_form(data, payment_information, connection_params):
-    return PrivatPaymentForm(
-        data,
-        payment_information,
-        connection_params,
-    )    
