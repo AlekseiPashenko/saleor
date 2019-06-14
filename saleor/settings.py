@@ -195,9 +195,9 @@ TEMPLATES = [
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 MIDDLEWARE = [
+    "django.middleware.common.CommonMiddleware",
     "saleor.core.middleware.django_session_middleware",
     "saleor.core.middleware.django_security_middleware",
-    "saleor.core.middleware.django_common_middleware",
     "saleor.core.middleware.django_csrf_view_middleware",
     "saleor.core.middleware.django_auth_middleware",
     "saleor.core.middleware.django_messages_middleware",
@@ -230,6 +230,7 @@ INSTALLED_APPS = [
     # Local apps
     "saleor.account",
     "saleor.discount",
+    "saleor.giftcard",
     "saleor.product",
     "saleor.checkout",
     "saleor.core",
@@ -258,7 +259,6 @@ INSTALLED_APPS = [
     "social_django",
     "django_countries",
     "django_filters",
-    "django_celery_results",
     "impersonate",
     "phonenumber_field",
     "captcha",
@@ -530,7 +530,7 @@ CELERY_TASK_ALWAYS_EAGER = not CELERY_BROKER_URL
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
-CELERY_RESULT_BACKEND = "django-db"
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", None)
 
 # Impersonate module settings
 IMPERSONATE = {
