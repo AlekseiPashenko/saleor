@@ -25,7 +25,6 @@ services:
     environment:
       - POSTGRES_USER=saleor
       - POSTGRES_PASSWORD=saleor
-
   redis:
     image: library/redis:5.0-alpine
     restart: unless-stopped

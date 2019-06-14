@@ -589,12 +589,22 @@ DUMMY = "dummy"
 BRAINTREE = "braintree"
 RAZORPAY = "razorpay"
 STRIPE = "stripe"
+PRIVAT = "privat"
 
 CHECKOUT_PAYMENT_GATEWAYS = {
-    DUMMY: pgettext_lazy("Payment method name", "Dummy gateway")
+    PRIVAT: pgettext_lazy("Payment method name", "Privat"),
+    # DUMMY: pgettext_lazy("Payment method name", "Dummy gateway"),
 }
 
 PAYMENT_GATEWAYS = {
+    PRIVAT: {
+        "module": "saleor.payment.gateways.privat",
+        "config": {
+            "auto_capture": True,
+            "connection_params": {},
+            "template_path": "order/payment/privat.html",
+        },
+    },
     DUMMY: {
         "module": "saleor.payment.gateways.dummy",
         "config": {
