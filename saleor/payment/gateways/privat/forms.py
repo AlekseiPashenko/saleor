@@ -1,14 +1,14 @@
 from django import forms
 from django.utils.translation import pgettext_lazy, ugettext_lazy as _
 
-from ... import ChargeStatus
+from ... import CustomPaymentChoices, ChargeStatus
 
 
 class PrivatPaymentForm(forms.Form):
     charge_status = forms.ChoiceField(
         label=pgettext_lazy("Payment status form field", "Payment status"),
-        choices=ChargeStatus.CHOICES,
-        initial=ChargeStatus.NOT_CHARGED,
+        choices=CustomPaymentChoices.CHOICES,
+        initial=CustomPaymentChoices.MANUAL,
         widget=forms.RadioSelect,
     )
 
@@ -18,18 +18,18 @@ class PrivatPaymentForm(forms.Form):
         # Partially refunded is not supported directly
         # since only last transaction of call_gateway will be processed
         charge_status = cleaned_data["charge_status"]
-        if charge_status in [
-            ChargeStatus.PARTIALLY_CHARGED,
-            ChargeStatus.PARTIALLY_REFUNDED,
-        ]:
-            raise forms.ValidationError(
-                _(
-                    "Setting charge status to {} directly "
-                    "is not supported. Please use the dashboard to "
-                    "refund partially.".format(charge_status)
-                ),
-                code="invalid_charge_status",
-            )
+        # if charge_status in [
+        #     ChargeStatus.PARTIALLY_CHARGED,
+        #     ChargeStatus.PARTIALLY_REFUNDED,
+        # ]:
+        #     raise forms.ValidationError(
+        #         _(
+        #             "Setting charge status to {} directly "
+        #             "is not supported. Please use the dashboard to "
+        #             "refund partially.".format(charge_status)
+        #         ),
+        #         code="invalid_charge_status",
+        #     )
 
         return cleaned_data
 

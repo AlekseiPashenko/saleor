@@ -1,6 +1,6 @@
 import uuid
 
-from ... import ChargeStatus, TransactionKind
+from ... import ChargeStatus, TransactionKind, CustomPaymentChoices
 from ...interface import GatewayConfig, GatewayResponse, PaymentData
 from .forms import PrivatPaymentForm
 
@@ -123,23 +123,20 @@ def process_payment(
     token = payment_information.token
 
     # Process payment normally if payment token is valid
-    if token not in dict(ChargeStatus.CHOICES):
-        return capture(payment_information, config)
+    # if token not in dict(ChargeStatus.CHOICES):
+    #     return capture(payment_information, config)
 
     # Process payment by charge status which is selected in the payment form
     # Note that is for testing by dummy gateway only
     charge_status = token
     authorize_response = authorize(payment_information, config)
-    if charge_status == ChargeStatus.NOT_CHARGED:
+    if charge_status == CustomPaymentChoices.MANUAL:
         return authorize_response
 
     if not config.auto_capture:
         return authorize_response
 
-    capture_response = capture(payment_information, config)
-    if charge_status == ChargeStatus.FULLY_REFUNDED:
-        return refund(payment_information, config)
-    return capture_response
-
-
-
+    # capture_response = capture(payment_information, config)
+    # if charge_status == ChargeStatus.FULLY_REFUNDED:
+    #     return refund(payment_information, config)
+    # return capture_response

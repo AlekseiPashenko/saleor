@@ -592,7 +592,7 @@ STRIPE = "stripe"
 PRIVAT = "privat"
 
 CHECKOUT_PAYMENT_GATEWAYS = {
-    PRIVAT: pgettext_lazy("Payment method name", "Privat gateway"),
+    PRIVAT: pgettext_lazy("Payment method name", "Privat"),
     # DUMMY: pgettext_lazy("Payment method name", "Dummy gateway"),
 }
 
